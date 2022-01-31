@@ -73,8 +73,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                                 && characteristic.properties.contains(CharPropFlags::WRITE)
                             {
                                 println!("Write to characteristic {:?}", characteristic.uuid);
-                                let cmd: &[u8] = "l\n".as_bytes();
-                                peripheral.write(&characteristic, &cmd, btleplug::api::WriteType::WithoutResponse).await?;
+                                let cmd_r: &[u8] = "r\n".as_bytes();// reset
+                                let cmd_l: &[u8] = "l\n".as_bytes();// start
+                                peripheral.write(&characteristic, &cmd_r, btleplug::api::WriteType::WithoutResponse).await?;
+                                time::sleep(Duration::from_secs(1)).await;
+                                peripheral.write(&characteristic, &cmd_l, btleplug::api::WriteType::WithoutResponse).await?;
 
                             }
                         }
