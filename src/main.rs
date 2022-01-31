@@ -10,6 +10,7 @@ use uuid::Uuid;
 const PERIPHERAL_NAME_MATCH_FILTER: &str = "SP_Mouse";
 /// UUID of the characteristic for which we should subscribe to notifications.
 const NOTIFY_CHARACTERISTIC_UUID: Uuid = Uuid::from_u128(0x446ceb4c_7e82_11ec_90d6_0242ac120003);
+const WRITE_CHARACTERISTIC_UUID : Uuid = Uuid::from_u128(0x446cea20_7e82_11ec_90d6_0242ac120003);
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -63,6 +64,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     if is_connected {
                         println!("Discover peripheral {:?} services...", local_name);
                         peripheral.discover_services().await?;
+                        // WRITE
+                        for characteristic in peripheral.characteristics() {
+                            println!("Checking characteristic {:?}", characteristic);
+                            // Subscribe to notifications from the characteristic with the selected
+                            // UUID.
+                            if characteristic.uuid == WRITE_CHARACTERISTIC_UUID
+                                && characteristic.properties.contains(CharPropFlags::WRITE)
+                            {
+                                println!("Write to characteristic {:?}", characteristic.uuid);
+                                let cmd: &[u8] = "l\n".as_bytes();
+                                peripheral.write(&characteristic, &cmd, btleplug::api::WriteType::WithoutResponse).await?;
+
+                            }
+                        }
+                        // NOTIFY
                         for characteristic in peripheral.characteristics() {
                             println!("Checking characteristic {:?}", characteristic);
                             // Subscribe to notifications from the characteristic with the selected
